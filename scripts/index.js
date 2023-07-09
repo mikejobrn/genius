@@ -1,26 +1,7 @@
-import { Cor } from './cor.mjs'
+import { Partida } from './partida.mjs'
 
-const AZUL = new Cor('azul')
-const AMARELO = new Cor('amarelo')
-const VERMELHO = new Cor('vermelho')
-const VERDE = new Cor('verde')
-
-const cores = new Map()
-cores.set(1, AZUL)
-cores.set(2, AMARELO)
-cores.set(3, VERMELHO)
-cores.set(4, VERDE)
-cores.set('azul', AZUL)
-cores.set('amarelo', AMARELO)
-cores.set('vermelho', VERMELHO)
-cores.set('verde', VERDE)
-
-let sequenciaCores = []
-let sequenciaJogadas = []
-let fimJogo = false
+let partida
 let pontuacaoMaxima = 0
-let pontuacaoAtual = 0
-let pontuacaoUltimaEtapa = 0
 
 document.getElementById('start').addEventListener('click', iniciarJogo)
 
@@ -30,10 +11,9 @@ async function iniciarJogo() {
 }
 
 function resetarJogo() {
-    sequenciaCores = []
-    sequenciaJogadas = []
-    fimJogo = false
+    partida = new Partida()
     ocultarResultado()
+    partida.testaVerificacaoErros()
 }
 
 function ocultarResultado() {
@@ -43,24 +23,9 @@ function ocultarResultado() {
 
 async function iniciarSequencia() {
     bloquearInputs()
-    sortearNovaCor()
-    await reproduzirSequencia()
+    partida.sortearNovaCor()
+    await partida.reproduzirSequencia()
     liberarInputs()
-}
-
-function sortearNovaCor() {
-    sequenciaCores.push(cores.get(sortearNumero()))
-}
-
-function sortearNumero() {
-    return Math.floor(Math.random() * 4) + 1
-}
-
-async function reproduzirSequencia() {
-    for (const cor of sequenciaCores) {        
-        await cor.play()
-        await new Promise(resolve => setTimeout(resolve, 200))
-    }
 }
 
 function bloquearInputs() {
@@ -79,53 +44,31 @@ function liberarInputs() {
 
 function acionaCor(e) {
     e.preventDefault()
-    const corSelecionada = obtemCorSelecionada(e.target.id)
-    corSelecionada.play()
-    adicionaCorAJogada(corSelecionada)
+    partida.acionarCor(e.target.id)
     checarJogada()
 }
 
-function obtemCorSelecionada(id) {
-    return cores.get(e.target.id)
-}
-
-function adicionaCorAJogada(cor) {
-    sequenciaJogadas.push(corSelecionada)
-}
-
 function checarJogada() {
-    for (let i = 0; i < sequenciaCores.length; i++) {
-        const errouJogada = sequenciaCores[i] !== sequenciaJogadas[i] && i < sequenciaJogadas.length
-        if (errouJogada) {
-            fimJogo = true
-            atualizarPontuacao()
-            if (pontuacaoAtual > pontuacaoMaxima) {
-                atualizarPontuacaoMaxima()
-            }
-            return exibirPlacar()
+    const acabouPartida = partida.temJogadaErrada()
+    if (acabouPartida) {
+        if (partida.pontuacaoAtual > pontuacaoMaxima) {
+            atualizarPontuacaoMaxima()
         }
+        return exibirPlacar()
     }
 
-    const acabouRodada = !fimJogo && sequenciaCores.length === sequenciaJogadas.length
-    if (acabouRodada) {
-        pontuacaoUltimaEtapa = sequenciaJogadas.length
-        sequenciaJogadas = []
+    if (partida.acabouRodada()) {
+        partida.iniciarNovaRodada()
         setTimeout(iniciarSequencia, 1000)
     }
 }
 
-function atualizarPontuacao() {
-    pontuacaoAtual = pontuacaoUltimaEtapa
-    document.getElementById('pontuacao').value = pontuacaoAtual
-}
-
 function atualizarPontuacaoMaxima() {
-    pontuacaoMaxima = pontuacaoAtual
-    document.getElementById('pontuacao-maxima').value = pontuacaoMaxima
+    pontuacaoMaxima = partida.pontuacaoAtual
 }
 
 function exibirPlacar() {
-    document.getElementById('pontuacao').innerText = pontuacaoAtual
+    document.getElementById('pontuacao').innerText = partida.pontuacaoAtual
     document.getElementById('pontuacao-maxima').innerText = pontuacaoMaxima
     document.getElementById('resultado').classList.remove('invisible')
 }
