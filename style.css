@@ -1,0 +1,50 @@
+.cor {
+    height: 100px;
+    width: 100px;
+}
+
+#azul {
+    background: blue;
+    filter: brightness(0.5);
+}
+
+#amarelo {
+    background: yellow;
+    filter: brightness(0.5);
+}
+
+#vermelho {
+    background: red;
+    filter: brightness(0.5);
+}
+
+#verde {
+    background: green;
+    filter: brightness(0.5);
+}
+
+.cor.aceso {
+    filter: brightness(1) blur(2px) !important;
+}
+
+#start {
+    background: grey;
+    height: 100px;
+    width: 100px;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 98vh;
+}
+
+#jogo {
+    display: flex;
+}
+
+.invisible {
+    display: none;
+}
