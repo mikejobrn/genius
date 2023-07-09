@@ -15,8 +15,6 @@ cores.set('amarelo', AMARELO)
 cores.set('vermelho', VERMELHO)
 cores.set('verde', VERDE)
 
-const sorteiaCor = () => Math.floor(Math.random() * 4) + 1
-
 let sequenciaCores = []
 let sequenciaJogadas = []
 let fimJogo = false
@@ -24,35 +22,55 @@ let pontuacaoMaxima = 0
 let pontuacaoAtual = 0
 let pontuacaoUltimaEtapa = 0
 
+document.getElementById('start').addEventListener('click', iniciarJogo)
+
 async function iniciarJogo() {
-    sequenciaCores = []
-    sequenciaJogadas = []
-    fimJogo = false
-    const resultadoDom = document.getElementById('resultado')
-    resultadoDom.classList.add('invisible')
+    resetarJogo()
     await iniciarSequencia()
 }
 
+function resetarJogo() {
+    sequenciaCores = []
+    sequenciaJogadas = []
+    fimJogo = false
+    ocultarResultado()
+}
+
+function ocultarResultado() {
+    const resultadoDom = document.getElementById('resultado')
+    resultadoDom.classList.add('invisible')
+}
+
 async function iniciarSequencia() {
-    bloqueiaInputs()
-    sequenciaCores.push(cores.get(sorteiaCor()))
+    bloquearInputs()
+    sortearNovaCor()
+    await reproduzirSequencia()
+    liberarInputs()
+}
+
+function sortearNovaCor() {
+    sequenciaCores.push(cores.get(sortearNumero()))
+}
+
+function sortearNumero() {
+    return Math.floor(Math.random() * 4) + 1
+}
+
+async function reproduzirSequencia() {
     for (const cor of sequenciaCores) {        
         await cor.play()
         await new Promise(resolve => setTimeout(resolve, 200))
     }
-    liberaInputs()
 }
 
-document.getElementById('start').addEventListener('click', iniciarJogo)
-
-function bloqueiaInputs() {
+function bloquearInputs() {
     const coresDom = document.getElementsByClassName('cor')
     for (const corDom of coresDom) {
         corDom.removeEventListener('click', acionaCor)
     }
 }
 
-function liberaInputs() {
+function liberarInputs() {
     const coresDom = document.getElementsByClassName('cor')
     for (const corDom of coresDom) {
         corDom.addEventListener('click', acionaCor)
@@ -61,43 +79,53 @@ function liberaInputs() {
 
 function acionaCor(e) {
     e.preventDefault()
-    const corSelecionada = cores.get(e.target.id)
+    const corSelecionada = obtemCorSelecionada(e.target.id)
     corSelecionada.play()
-    sequenciaJogadas.push(corSelecionada)
+    adicionaCorAJogada(corSelecionada)
     checarJogada()
+}
+
+function obtemCorSelecionada(id) {
+    return cores.get(e.target.id)
+}
+
+function adicionaCorAJogada(cor) {
+    sequenciaJogadas.push(corSelecionada)
 }
 
 function checarJogada() {
     for (let i = 0; i < sequenciaCores.length; i++) {
-        if (sequenciaJogadas.length <= sequenciaCores.length && sequenciaJogadas[i] !== undefined && sequenciaCores[i] !== sequenciaJogadas[i]) {
+        const errouJogada = sequenciaCores[i] !== sequenciaJogadas[i] && i < sequenciaJogadas.length
+        if (errouJogada) {
             fimJogo = true
-            pontuacaoAtual = pontuacaoUltimaEtapa
             atualizarPontuacao()
             if (pontuacaoAtual > pontuacaoMaxima) {
-                pontuacaoMaxima = pontuacaoAtual
                 atualizarPontuacaoMaxima()
             }
-            break
+            return exibirPlacar()
         }
     }
 
-    if (!fimJogo && sequenciaCores.length === sequenciaJogadas.length) {
+    const acabouRodada = !fimJogo && sequenciaCores.length === sequenciaJogadas.length
+    if (acabouRodada) {
         pontuacaoUltimaEtapa = sequenciaJogadas.length
         sequenciaJogadas = []
         setTimeout(iniciarSequencia, 1000)
-    } 
-    else if (fimJogo) {
-        document.getElementById('pontuacao').innerText = pontuacaoAtual
-        document.getElementById('pontuacao-maxima').innerText = pontuacaoMaxima
-        document.getElementById('resultado').classList.remove('invisible')
     }
-
 }
 
 function atualizarPontuacao() {
+    pontuacaoAtual = pontuacaoUltimaEtapa
     document.getElementById('pontuacao').value = pontuacaoAtual
 }
 
 function atualizarPontuacaoMaxima() {
+    pontuacaoMaxima = pontuacaoAtual
     document.getElementById('pontuacao-maxima').value = pontuacaoMaxima
+}
+
+function exibirPlacar() {
+    document.getElementById('pontuacao').innerText = pontuacaoAtual
+    document.getElementById('pontuacao-maxima').innerText = pontuacaoMaxima
+    document.getElementById('resultado').classList.remove('invisible')
 }
